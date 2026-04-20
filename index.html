@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Tutor AI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>English Practice</h1>
+            <p id="status-text">Tap the microphone to start talking</p>
+        </header>
+
+        <main id="chat-container">
+            <div class="message ai-message">
+                <div class="bubble">Hi! I am your English tutor. What would you like to talk about today?</div>
+            </div>
+        </main>
+
+        <footer>
+            <button id="micBtn" class="mic-button" aria-label="Microphone">
+                <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor">
+                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                </svg>
+            </button>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
