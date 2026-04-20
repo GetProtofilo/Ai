@@ -1,119 +1,106 @@
-const GEMINI_API_KEY = 'AIzaSyBk2sXeRplSbZz_NNhfd9fxnYA7ZlgpJhk'; 
+const API_KEY = 'AIzaSyBk2sXeRplSbZz_NNhfd9fxnYA7ZlgpJhk'; // PASTE YOUR KEY HERE
 
 const micBtn = document.getElementById('micBtn');
 const statusText = document.getElementById('status-text');
 const chatContainer = document.getElementById('chat-container');
+const orb = document.getElementById('orb');
 
-let conversationHistory = [
-    { "role": "user", "parts": [{ "text": "You are a patient English tutor. Keep responses very short (1-2 sentences). Speak naturally. If I make a grammar mistake, gently correct me." }] }
+let history = [
+    { role: "user", parts: [{ text: "System: You are a friendly English tutor. Keep responses very short and clear. If I make a grammar mistake, gently fix it." }] }
 ];
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const recognition = new SpeechRecognition();
 const synth = window.speechSynthesis;
 
-// SETTINGS FOR CONTINUOUS TALK
 recognition.lang = 'en-US';
 recognition.interimResults = false;
-recognition.continuous = false; // We manual-restart for better accuracy
-
-let isAutoListening = false;
+let isConversationActive = false;
 
 micBtn.onclick = () => {
-    if (isAutoListening) {
-        stopEverything();
-    } else {
+    if (!isConversationActive) {
+        isConversationActive = true;
+        document.body.classList.add('listening-active');
         startListening();
-        isAutoListening = true;
+    } else {
+        stopConversation();
     }
 };
 
 function startListening() {
+    if (!isConversationActive) return;
     try {
         recognition.start();
-        micBtn.classList.add('listening');
-        statusText.innerText = "I'm listening... Speak naturally.";
-    } catch (e) { console.log("Already listening"); }
+        orb.style.background = "#4ade80";
+        orb.style.boxShadow = "0 0 15px #4ade80";
+        statusText.innerText = "I'm listening...";
+    } catch (e) {}
 }
 
-function stopEverything() {
+function stopConversation() {
+    isConversationActive = false;
+    document.body.classList.remove('listening-active');
     recognition.stop();
     synth.cancel();
-    isAutoListening = false;
-    micBtn.classList.remove('listening');
-    statusText.innerText = "Conversation stopped. Tap to start.";
+    statusText.innerText = "Session ended.";
+    orb.style.background = "#94a3b8";
+    orb.style.boxShadow = "none";
 }
 
 recognition.onresult = async (event) => {
-    const userText = event.results[0][0].transcript;
+    const text = event.results[0][0].transcript;
+    appendMsg(text, 'user');
     statusText.innerText = "Thinking...";
-    appendMessage(userText, 'user');
+    orb.style.background = "#f59e0b"; // Yellow for thinking
     
-    await fetchGeminiResponse(userText);
+    await askGemini(text);
 };
 
-// If the mic stops because of silence, and we are in "Auto Mode", restart it AFTER AI speaks
-recognition.onend = () => {
-    if (isAutoListening && !synth.speaking) {
-        // This keeps the loop going if Gemini is still thinking
-    }
-};
+async function askGemini(text) {
+    history.push({ role: "user", parts: [{ text: text }] });
 
-async function fetchGeminiResponse(userText) {
-    conversationHistory.push({ "role": "user", "parts": [{ "text": userText }] });
-
-    // Use the 1.5-Flash model - it's the most stable for free tier
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-    
     try {
-        const response = await fetch(url, {
+        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: conversationHistory })
+            body: JSON.stringify({ contents: history })
         });
-
-        const data = await response.json();
+        
+        const data = await resp.json();
         const aiText = data.candidates[0].content.parts[0].text;
         
-        conversationHistory.push({ "role": "model", "parts": [{ "text": aiText }] });
-        appendMessage(aiText, 'ai');
-        speakResponse(aiText);
-
-    } catch (error) {
-        console.error(error);
-        // If it fails, we try to restart the mic so she can try again
-        statusText.innerText = "Connection blip. Try again!";
-        if (isAutoListening) setTimeout(startListening, 1000);
+        history.push({ role: "model", parts: [{ text: aiText }] });
+        appendMsg(aiText, 'ai');
+        speak(aiText);
+    } catch (err) {
+        statusText.innerText = "Connection error.";
+        setTimeout(startListening, 2000);
     }
 }
 
-function speakResponse(text) {
-    const utterThis = new SpeechSynthesisUtterance(text);
-    utterThis.rate = 1.0; 
+function speak(text) {
+    const speech = new SpeechSynthesisUtterance(text);
+    speech.rate = 1.0;
     
-    utterThis.onstart = () => {
-        statusText.innerText = "AI is speaking...";
+    speech.onstart = () => {
+        orb.style.background = "#6366f1"; // Purple for speaking
+        statusText.innerText = "AI is talking...";
     };
 
-    utterThis.onend = () => {
-        if (isAutoListening) {
-            // THE SECRET SAUCE: Wait 500ms after speaking, then start listening again automatically
-            setTimeout(startListening, 500);
-        } else {
-            statusText.innerText = "Tap to talk";
+    speech.onend = () => {
+        // CONTINUOUS LOOP: After speaking, go back to listening automatically
+        if (isConversationActive) {
+            setTimeout(startListening, 400);
         }
     };
     
-    synth.speak(utterThis);
+    synth.speak(speech);
 }
 
-function appendMessage(text, sender) {
-    const messageDiv = document.createElement('div');
-    messageDiv.classList.add('message', `${sender}-message`);
-    const bubbleDiv = document.createElement('div');
-    bubbleDiv.classList.add('bubble');
-    bubbleDiv.innerText = text;
-    messageDiv.appendChild(bubbleDiv);
-    chatContainer.appendChild(messageDiv);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+function appendMsg(text, type) {
+    const div = document.createElement('div');
+    div.className = `message ${type}-message`;
+    div.innerHTML = `<div class="bubble">${text}</div>`;
+    chatContainer.appendChild(div);
+    chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
 }
