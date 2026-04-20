@@ -1,26 +1,24 @@
-const API_KEY = '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'; // Use your Groq Key here
+// 1. USE YOUR GROQ KEY HERE
+const API_KEY = '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'; 
 
 const micBtn = document.getElementById('micBtn');
 const statusText = document.getElementById('status-text');
 const chatContainer = document.getElementById('chat-container');
-const orb = document.getElementById('orb');
 
 let history = [
-    { role: "system", content: "You are a patient English tutor. The user might speak Hindi; if they do, translate it to English first, then respond in English. Keep responses very short (1-2 sentences). Always be encouraging." }
+    { role: "system", content: "You are a patient English tutor. If the user speaks Hindi, translate it. Keep responses to 1-2 short sentences." }
 ];
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const recognition = new SpeechRecognition();
 const synth = window.speechSynthesis;
 
-recognition.lang = 'en-US'; // It can still pick up Hindi sounds or Hinglish
-recognition.interimResults = false;
+recognition.lang = 'en-US';
 let isConversationActive = false;
 
 micBtn.onclick = () => {
     if (!isConversationActive) {
         isConversationActive = true;
-        document.body.classList.add('listening-active');
         startListening();
     } else {
         stopConversation();
@@ -31,26 +29,21 @@ function startListening() {
     if (!isConversationActive) return;
     try {
         recognition.start();
-        orb.style.background = "#4ade80";
-        statusText.innerText = "I'm listening... Speak now.";
+        statusText.innerText = "Listening...";
     } catch (e) {}
 }
 
 function stopConversation() {
     isConversationActive = false;
-    document.body.classList.remove('listening-active');
     recognition.stop();
     synth.cancel();
-    statusText.innerText = "Talk again soon!";
-    orb.style.background = "#94a3b8";
+    statusText.innerText = "Stopped.";
 }
 
 recognition.onresult = async (event) => {
     const text = event.results[0][0].transcript;
     appendMsg(text, 'user');
-    statusText.innerText = "AI is thinking...";
-    orb.style.background = "#f59e0b"; 
-    
+    statusText.innerText = "Thinking...";
     await askAI(text);
 };
 
@@ -58,48 +51,49 @@ async function askAI(text) {
     history.push({ role: "user", content: text });
 
     try {
-        // Groq API is lightning fast and works great for this
-        const resp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-            method: 'POST',
+        // We use the direct Groq API but with specific settings to avoid browser blocks
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
             headers: {
-                'Authorization': `Bearer ${API_KEY}`,
-                'Content-Type': 'application/json'
+                "Authorization": `Bearer ${API_KEY}`,
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "llama-3.1-70b-versatile",
+                model: "llama-3.1-8b-instant", // Using the 8b model for ultra-speed
                 messages: history,
-                max_tokens: 100
+                temperature: 0.7
             })
         });
-        
-        const data = await resp.json();
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error.message || "API Error");
+        }
+
+        const data = await response.json();
         const aiText = data.choices[0].message.content;
         
         history.push({ role: "assistant", content: aiText });
         appendMsg(aiText, 'ai');
         speak(aiText);
+
     } catch (err) {
-        console.error(err);
-        statusText.innerText = "Connection error. Reconnecting...";
-        setTimeout(startListening, 1000);
+        console.error("DEBUG:", err);
+        statusText.innerText = "Error: " + err.message;
+        // Auto-restart mic after 3 seconds so she isn't stuck
+        setTimeout(startListening, 3000);
     }
 }
 
 function speak(text) {
     const speech = new SpeechSynthesisUtterance(text);
     speech.rate = 0.9;
-    
-    speech.onstart = () => {
-        orb.style.background = "#6366f1"; 
-        statusText.innerText = "AI is talking...";
-    };
-
+    speech.onstart = () => { statusText.innerText = "AI is talking..."; };
     speech.onend = () => {
         if (isConversationActive) {
-            setTimeout(startListening, 500); // Back to listening!
+            setTimeout(startListening, 500);
         }
     };
-    
     synth.speak(speech);
 }
 
