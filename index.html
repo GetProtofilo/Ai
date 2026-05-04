@@ -3,165 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium LMS Demo</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>VIP Course Portal - Trial</title>
     <style>
-        :root {
-            --accent: #FFD700; /* Gold accent */
-            --bg: #0a0a0a;
-            --card-bg: #1a1a1a;
-            --text: #ffffff;
-        }
+        :root { --gold: #FFD700; --dark: #050505; --card: #121212; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        
+        body { background: var(--dark); color: white; text-align: center; }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        /* Step Tracking */
+        .step-header { background: #1a1a1a; padding: 10px; font-size: 12px; color: var(--gold); font-weight: 900; letter-spacing: 1px; }
 
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+        /* Sales Page Look */
+        #sales-page { padding: 20px; }
+        .hero-img { width: 100%; border-radius: 15px; border: 1px solid #333; margin-bottom: 20px; }
+        h1 { font-size: 26px; font-weight: 900; margin-bottom: 10px; line-height: 1.2; }
+        .price { font-size: 35px; font-weight: 900; color: var(--gold); }
+        .old-price { text-decoration: line-through; color: #666; font-size: 20px; }
 
-        /* Fancy Background Glow */
-        .glow {
-            position: fixed;
-            width: 300px; height: 300px;
-            background: radial-gradient(circle, rgba(255,215,0,0.15) 0%, rgba(0,0,0,0) 70%);
-            top: -100px; right: -100px; z-index: -1;
-        }
+        /* Timer */
+        .timer-bar { background: var(--gold); color: black; padding: 12px; font-weight: 900; border-radius: 8px; margin: 20px 0; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
-        .container { width: 90%; max-width: 400px; text-align: center; }
+        /* Lesson List */
+        .curriculum { text-align: left; margin: 20px 0; }
+        .lesson { background: var(--card); border: 1px solid #222; padding: 15px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; border-left: 5px solid var(--gold); }
+        .lock-icon { filter: grayscale(1); opacity: 0.5; }
 
-        /* Card Styling */
-        .glass-card {
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-        }
+        /* Footer Button */
+        .footer { position: fixed; bottom: 0; width: 100%; background: rgba(0,0,0,0.9); padding: 15px; border-top: 1px solid #222; }
+        .pay-btn { background: var(--gold); color: black; width: 90%; padding: 18px; border-radius: 50px; font-weight: 900; border: none; font-size: 18px; cursor: pointer; box-shadow: 0 0 25px rgba(255,215,0,0.3); }
 
-        /* Bold Typography */
-        h1 { font-weight: 900; font-size: 28px; letter-spacing: -1px; margin-bottom: 10px; }
-        p { color: #888; font-size: 14px; margin-bottom: 30px; }
-
-        /* Premium Inputs */
-        .input-box {
-            width: 100%;
-            background: #252525;
-            border: 2px solid transparent;
-            padding: 15px;
-            border-radius: 12px;
-            color: white;
-            font-weight: 700;
-            margin-bottom: 15px;
-            outline: none;
-            transition: 0.3s;
-        }
-        .input-box:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(255,215,0,0.2); }
-
-        /* THE IMPRESSIVE BUTTON */
-        .fancy-btn {
-            width: 100%;
-            background: var(--accent);
-            color: #000;
-            border: none;
-            padding: 18px;
-            border-radius: 12px;
-            font-weight: 900;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-        }
-        .fancy-btn:hover { transform: scale(1.02); box-shadow: 0 10px 20px rgba(255,215,0,0.3); }
-        .fancy-btn:active { transform: scale(0.98); }
-
-        /* Video Player Section */
-        #video-section { display: none; }
-        .video-container {
-            width: 100%;
-            aspect-ratio: 16/9;
-            background: #000;
-            border-radius: 15px;
-            margin-top: 20px;
-            overflow: hidden;
-            border: 1px solid var(--accent);
-        }
-
-        /* Features List */
-        .features {
-            margin-top: 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            text-align: left;
-        }
-        .feat-item { font-size: 11px; font-weight: 700; background: #252525; padding: 8px; border-radius: 8px; color: var(--accent); }
-
+        /* Course Dashboard (Hidden initially) */
+        #course-dashboard { display: none; padding: 20px; }
+        .video-container { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 15px; border: 2px solid var(--gold); overflow: hidden; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-    <div class="glow"></div>
+    <div class="step-header" id="status-bar">STEP 1: ENROLL IN COURSE</div>
 
-    <div class="container">
-        <div id="login-card" class="glass-card">
-            <h1>VIP ACCESS</h1>
-            <p>Enter your student credentials to unlock the course videos.</p>
-            
-            <input type="text" class="input-box" placeholder="STUDENT ID">
-            <input type="password" class="input-box" placeholder="ACCESS KEY">
-            
-            <button class="fancy-btn" onclick="startLoading()">
-                <span>UNLOCK CONTENT</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </button>
+    <div id="sales-page">
+        <div class="hero-img" style="background: linear-gradient(45deg, #111, #222); height: 180px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: var(--gold); border: 2px dashed #444;">
+            [ COURSE POSTER HERE ]
+        </div>
+        
+        <h1>Digital Business Mastery</h1>
+        <p style="color: #888;">Learn to earn ₹1 Lakh/month from home.</p>
+        
+        <div class="timer-bar">OFFER ENDS IN <span id="clock">14:59</span></div>
+        
+        <div class="price">₹499 <span class="old-price">₹5,999</span></div>
 
-            <div class="features">
-                <div class="feat-item">✔ AUTO-ACCESS</div>
-                <div class="feat-item">✔ VIMEO SECURE</div>
-                <div class="feat-item">✔ MOBILE READY</div>
-                <div class="feat-item">✔ NO ADS</div>
-            </div>
+        <div class="curriculum">
+            <div class="lesson"><span>1. Introduction to Ads</span> <span>🔒</span></div>
+            <div class="lesson"><span>2. Scaling Strategy</span> <span>🔒</span></div>
+            <div class="lesson"><span>3. Bonus: Secret Tools</span> <span>🔒</span></div>
         </div>
 
-        <div id="video-section" class="glass-card">
-            <h1 style="text-align: left; font-size: 20px;">WELCOME BACK!</h1>
-            <p style="text-align: left;">Course: Digital Masterclass 2026</p>
-            
-            <div class="video-container" id="player">
-                </div>
+        <div class="footer">
+            <button class="pay-btn" onclick="simulatePayment()">JOIN NOW & PAY ₹499</button>
+        </div>
+    </div>
 
-            <button class="fancy-btn" style="margin-top: 20px; background: #333; color: white;" onclick="window.location.reload()">
-                LOGOUT
-            </button>
+    <div id="course-dashboard">
+        <h2 style="color: var(--gold); font-weight: 900;">WELCOME, STUDENT! ✅</h2>
+        <p>Your payment was successful. Access granted.</p>
+        
+        <div class="video-container">
+            <iframe src="https://player.vimeo.com/video/347119375?color=FFD700&title=0&byline=0" 
+            style="width:100%; height:100%;" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
+        </div>
+
+        <div class="curriculum" style="margin-top: 20px;">
+            <p style="margin-bottom: 10px; font-weight: bold;">YOUR LESSONS:</p>
+            <div class="lesson" style="border-left-color: #00ff00;"><span>1. Introduction (UNLOCKED)</span> <span>✅</span></div>
         </div>
     </div>
 
     <script>
-        function startLoading() {
-            const btn = document.querySelector('.fancy-btn');
-            btn.innerHTML = 'VALIDATING...';
-            btn.style.opacity = '0.7';
+        // Timer Logic
+        let time = 900;
+        setInterval(() => {
+            let m = Math.floor(time / 60);
+            let s = time % 60;
+            document.getElementById('clock').innerHTML = `${m}:${s < 10 ? '0'+s : s}`;
+            if(time > 0) time--;
+        }, 1000);
 
-            // Simulate "Automatic Access" Check
+        // Simulation of Payment and Auto-Access
+        function simulatePayment() {
+            const btn = document.querySelector('.pay-btn');
+            btn.innerHTML = "OPENING SECURE GATEWAY...";
+            btn.style.background = "#fff";
+
             setTimeout(() => {
-                document.getElementById('login-card').style.display = 'none';
-                document.getElementById('video-section').style.display = 'block';
-                
-                // Injecting a high-quality Vimeo placeholder
-                document.getElementById('player').innerHTML = `
-                    <iframe src="https://player.vimeo.com/video/347119375?color=FFD700&title=0&byline=0&portrait=0" 
-                    style="width:100%;height:100%;" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
-                `;
-            }, 1500);
+                const confirmed = confirm("Simulate Payment Success?\n(Real setup will connect to Razorpay/UPI)");
+                if(confirmed) {
+                    document.getElementById('sales-page').style.display = 'none';
+                    document.getElementById('status-bar').innerHTML = "STEP 2: COURSE ACCESS GRANTED";
+                    document.getElementById('status-bar').style.color = "#00ff00";
+                    document.getElementById('course-dashboard').style.display = 'block';
+                    window.scrollTo(0,0);
+                } else {
+                    btn.innerHTML = "JOIN NOW & PAY ₹499";
+                    btn.style.background = "var(--gold)";
+                }
+            }, 1000);
         }
     </script>
 </body>
